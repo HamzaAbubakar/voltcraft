@@ -476,7 +476,6 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <button class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300">All Items <span class="ml-1 text-amber-500">248</span></button>
                         <button class="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-400 transition-colors hover:text-white">Low Stock <span class="ml-1 text-red-400">12</span></button>
-                        <button class="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-400 transition-colors hover:text-white">On Order <span class="ml-1 text-sky-400">7</span></button>
                     </div>
                     <div class="flex gap-2">
                         <label class="flex min-w-0 items-center gap-2 rounded-lg border border-gray-800 bg-gray-900 px-3 text-gray-500">
