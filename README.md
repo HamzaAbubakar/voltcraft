@@ -21,6 +21,6 @@ The dashboard and Breeze login screens currently load Tailwind CSS and Font Awes
 
 - Login, session logout, seeded admin user, and authenticated dashboard access use Laravel Breeze.
 - The dashboard UI is in `resources/views/dashboard/index.blade.php`.
-- Dashboard figures and module data are still static HTML; forms do not persist ERP records yet.
+- Dashboard figures and most module data are still static HTML. The dashboard capital-flow form records cash transactions, battery sale line items, and supplier receipts that increase inventory.
 - Projects, Company Shares, and Investments are shown as disabled sidebar items until their panels are built.
 - Before exposing the app publicly, protect the seeded admin credentials and replace CDN assets with locally built assets.
