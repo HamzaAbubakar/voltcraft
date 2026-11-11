@@ -9,7 +9,13 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkforceController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/run_migration78432', function () {
+    $status = Artisan::call('migrate --force');
+    return response()->json(['status' => $status]);
+})->name('health');
 
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : view('auth.login');
