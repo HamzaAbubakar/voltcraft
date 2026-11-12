@@ -14,13 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class CashTransactionItem extends Model
 {
-    public const BATTERY_OPTIONS = [
-        '48V Type A (Wall Mount)',
-        '48V Type B (Server Rack)',
-        '24V Heavy Duty Pack',
-        '12V Standard Pack',
-    ];
-
     /**
      * Get the cash transaction associated with the line item.
      *

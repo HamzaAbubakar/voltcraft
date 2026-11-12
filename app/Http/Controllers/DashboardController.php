@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BatteryModel;
 use App\Models\CashAccount;
 use App\Models\CashTransaction;
 use App\Models\CashTransactionItem;
@@ -56,11 +57,19 @@ class DashboardController extends Controller
                 ->orderBy('id')
                 ->limit(6)
                 ->get(['id', 'sku', 'name', 'category', 'quantity_on_hand', 'unit', 'reorder_point']),
-            'batteryOptions' => CashTransactionItem::BATTERY_OPTIONS,
-            'batterySales' => collect(CashTransactionItem::BATTERY_OPTIONS)
-                ->map(fn (string $name): array => [
-                    'name' => $name,
-                    'quantity' => (float) ($monthlyBatterySales[$name] ?? 0),
+            'batteryOptions' => BatteryModel::query()
+                ->whereHas('inventoryItems')
+                ->orderBy('name')
+                ->orderBy('id')
+                ->get(['id', 'name']),
+            'batterySales' => BatteryModel::query()
+                ->whereHas('inventoryItems')
+                ->orderBy('name')
+                ->orderBy('id')
+                ->get(['name'])
+                ->map(fn (BatteryModel $batteryModel): array => [
+                    'name' => $batteryModel->name,
+                    'quantity' => (float) ($monthlyBatterySales[$batteryModel->name] ?? 0),
                 ]),
             'salesMonth' => $now->format('F Y'),
             'recentTransactions' => CashTransaction::query()

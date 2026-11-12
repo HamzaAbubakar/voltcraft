@@ -12,6 +12,9 @@
             <p class="mt-0.5 text-xs text-gray-400">Track stock quantities, reorder points, and item costs</p>
         </div>
         <div class="flex flex-wrap gap-2">
+            <a href="{{ route('inventory.battery-models.index') }}" class="inline-flex items-center justify-center rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-xs font-semibold text-gray-200 transition-colors hover:bg-gray-800">
+                <i class="fas fa-battery-three-quarters mr-2"></i>Battery Mappings
+            </a>
             <a href="{{ route('inventory.movements.create') }}" class="inline-flex items-center justify-center rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-xs font-semibold text-gray-200 transition-colors hover:bg-gray-800">
                 <i class="fas fa-truck-ramp-box mr-2"></i>Receive / Adjust Stock
             </a>
@@ -102,7 +105,7 @@
                             </td>
                             <td class="px-4 py-3.5">
                                 <span class="rounded-full px-2 py-1 text-[10px] font-semibold {{ $isLowStock ? 'bg-red-500/10 text-red-300' : 'bg-emerald-500/10 text-emerald-300' }}">
-                                    {{ (float) $item->quantity_on_hand <= 0 ? 'Out of stock' : ($isLowStock ? 'Low' : 'Healthy') }}
+                                    {{ (float) $item->quantity_on_hand < 0 ? 'Negative stock' : ((float) $item->quantity_on_hand === 0.0 ? 'Out of stock' : ($isLowStock ? 'Low' : 'Healthy')) }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 text-right font-mono text-gray-300">Rs {{ number_format((float) $item->unit_cost, 2) }}</td>

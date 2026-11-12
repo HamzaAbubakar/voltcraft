@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\BatteryModelController;
 use App\Http\Controllers\CapitalFlowController;
 use App\Http\Controllers\CashAccountController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\CashTransactionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeCompensationController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeDailyCompensationController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProfileController;
@@ -14,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/run_migration78432', function () {
     $status = Artisan::call('migrate --force');
+
     return response()->json(['status' => $status]);
 })->name('health');
 
@@ -25,6 +30,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/capital-flows', [CapitalFlowController::class, 'store'])
         ->name('dashboard.capital-flows.store');
+    Route::get('/inventory/battery-models', [BatteryModelController::class, 'index'])
+        ->name('inventory.battery-models.index');
+    Route::put('/inventory/battery-models/{batteryModel}', [BatteryModelController::class, 'update'])
+        ->name('inventory.battery-models.update');
     Route::resource('inventory', InventoryController::class)
         ->parameters(['inventory' => 'inventoryItem']);
     Route::get('/inventory-movements/create', [InventoryController::class, 'createMovement'])
@@ -41,6 +50,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/cash/transactions/{cashTransaction}/edit', [CashTransactionController::class, 'edit'])->name('cash.transactions.edit');
     Route::put('/cash/transactions/{cashTransaction}', [CashTransactionController::class, 'update'])->name('cash.transactions.update');
     Route::get('/workforce', [WorkforceController::class, 'index'])->name('workforce.index');
+    Route::resource('workforce/employees', EmployeeController::class)
+        ->except(['show', 'destroy'])
+        ->names('workforce.employees');
+    Route::get('/workforce/compensations/create', [EmployeeCompensationController::class, 'create'])
+        ->name('workforce.compensations.create');
+    Route::post('/workforce/compensations', [EmployeeCompensationController::class, 'store'])
+        ->name('workforce.compensations.store');
+    Route::get('/workforce/compensations/{compensation}/edit', [EmployeeCompensationController::class, 'edit'])
+        ->name('workforce.compensations.edit');
+    Route::put('/workforce/compensations/{compensation}', [EmployeeCompensationController::class, 'update'])
+        ->name('workforce.compensations.update');
+    Route::get('/workforce/daily-compensations/create', [EmployeeDailyCompensationController::class, 'create'])
+        ->name('workforce.daily-compensations.create');
+    Route::post('/workforce/daily-compensations', [EmployeeDailyCompensationController::class, 'store'])
+        ->name('workforce.daily-compensations.store');
+    Route::get('/workforce/daily-compensations/{dailyCompensation}/edit', [EmployeeDailyCompensationController::class, 'edit'])
+        ->name('workforce.daily-compensations.edit');
+    Route::put('/workforce/daily-compensations/{dailyCompensation}', [EmployeeDailyCompensationController::class, 'update'])
+        ->name('workforce.daily-compensations.update');
     Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::get('/expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');
     Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');

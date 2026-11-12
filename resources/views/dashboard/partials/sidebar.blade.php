@@ -13,7 +13,11 @@
                     <span>Inventory Management</span>
                 </a>
 
-                
+                <a href="{{ route('inventory.battery-models.index') }}" aria-current="{{ request()->routeIs('inventory.battery-models.*') ? 'page' : 'false' }}" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('inventory.battery-models.*') ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/10 font-semibold' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}">
+                    <i class="fas fa-battery-three-quarters text-base"></i>
+                    <span>Battery Model Mapping</span>
+                </a>
+
                 <a href="{{ route('cash.index') }}" aria-current="{{ request()->routeIs('cash.index') ? 'page' : 'false' }}" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('cash.index') ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/10 font-semibold' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}">
                     <i class="fas fa-coins text-base"></i>
                     <span>Cash In and Out</span>

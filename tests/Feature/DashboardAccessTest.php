@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\BatteryModel;
 use App\Models\CashAccount;
 use App\Models\CashTransaction;
 use App\Models\InventoryItem;
@@ -102,6 +103,14 @@ class DashboardAccessTest extends TestCase
             'reorder_point' => '5.000',
             'unit_cost' => '10.00',
         ]);
+        BatteryModel::query()
+            ->where('name', '12V Standard Pack')
+            ->firstOrFail()
+            ->inventoryItems()
+            ->attach(
+                InventoryItem::query()->where('sku', 'INV-OK-001')->firstOrFail(),
+                ['quantity_per_battery' => '1.000'],
+            );
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 

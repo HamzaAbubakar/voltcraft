@@ -36,7 +36,7 @@
                             @foreach ($lowStockItems as $item)
                                 @php
                                     $stockBufferPercent = (float) $item->reorder_point > 0
-                                        ? min(100, (float) $item->quantity_on_hand / (float) $item->reorder_point * 100)
+                                        ? max(0, min(100, (float) $item->quantity_on_hand / (float) $item->reorder_point * 100))
                                         : 0;
                                     $stockIsCritical = $stockBufferPercent <= 50;
                                 @endphp
@@ -165,6 +165,7 @@
                                     'type' => old('type', 'cash_in'),
                                     'batteryItems' => is_array(old('battery_items')) ? old('battery_items') : [],
                                     'inventoryItems' => is_array(old('inventory_items')) ? old('inventory_items') : [],
+                                    'hasBatteryOptions' => $batteryOptions->isNotEmpty(),
                                 ];
                             @endphp
                             <form
@@ -198,29 +199,38 @@
                                     <div class="flex items-center justify-between gap-2">
                                         <div>
                                             <h5 class="text-xs font-semibold text-gray-300">Battery selections</h5>
-                                            <p class="mt-1 text-[10px] text-gray-500">Inventory mapping will be added later.</p>
+                                            <p class="mt-1 text-[10px] text-gray-500">Mapped components are deducted from inventory when sold.</p>
                                         </div>
-                                        <button type="button" data-add-item="battery" class="rounded border border-gray-700 px-2.5 py-1.5 text-[10px] font-semibold text-amber-300 hover:bg-gray-800">Add Battery</button>
+                                        @if ($batteryOptions->isNotEmpty())
+                                            <button type="button" data-add-item="battery" class="rounded border border-gray-700 px-2.5 py-1.5 text-[10px] font-semibold text-amber-300 hover:bg-gray-800">Add Battery</button>
+                                        @endif
                                     </div>
-                                    <div id="battery-items-container" class="space-y-2"></div>
-                                    <template id="battery-item-template">
-                                        <div class="grid grid-cols-[minmax(0,1fr)_5rem_auto] items-end gap-2">
-                                            <div>
-                                                <label for="battery-name-__INDEX__" class="mb-1 block text-[10px] font-medium text-gray-500">Battery</label>
-                                                <select id="battery-name-__INDEX__" name="battery_items[__INDEX__][name]" required class="w-full rounded-lg border border-gray-800 bg-gray-950 p-2 text-xs text-gray-200 focus:border-amber-500 focus:outline-none">
-                                                    <option value="">Choose model</option>
-                                                    @foreach ($batteryOptions as $batteryOption)
-                                                        <option value="{{ $batteryOption }}">{{ $batteryOption }}</option>
-                                                    @endforeach
-                                                </select>
+                                    @if ($batteryOptions->isNotEmpty())
+                                        <div id="battery-items-container" class="space-y-2"></div>
+                                        <template id="battery-item-template">
+                                            <div class="grid grid-cols-[minmax(0,1fr)_5rem_auto] items-end gap-2">
+                                                <div>
+                                                    <label for="battery-model-__INDEX__" class="mb-1 block text-[10px] font-medium text-gray-500">Battery</label>
+                                                    <select id="battery-model-__INDEX__" name="battery_items[__INDEX__][battery_model_id]" required class="w-full rounded-lg border border-gray-800 bg-gray-950 p-2 text-xs text-gray-200 focus:border-amber-500 focus:outline-none">
+                                                        <option value="">Choose model</option>
+                                                        @foreach ($batteryOptions as $batteryOption)
+                                                            <option value="{{ $batteryOption->id }}">{{ $batteryOption->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label for="battery-quantity-__INDEX__" class="mb-1 block text-[10px] font-medium text-gray-500">Qty</label>
+                                                    <input id="battery-quantity-__INDEX__" name="battery_items[__INDEX__][quantity]" type="number" min="1" max="999999" step="1" required class="w-full rounded-lg border border-gray-800 bg-gray-950 p-2 text-xs text-gray-200 focus:border-amber-500 focus:outline-none">
+                                                </div>
+                                                <button type="button" data-remove-item aria-label="Remove battery selection" class="mb-0.5 rounded border border-gray-700 px-2 py-2 text-xs text-gray-400 hover:border-red-700 hover:text-red-300"><i class="fas fa-trash"></i></button>
                                             </div>
-                                            <div>
-                                                <label for="battery-quantity-__INDEX__" class="mb-1 block text-[10px] font-medium text-gray-500">Qty</label>
-                                                <input id="battery-quantity-__INDEX__" name="battery_items[__INDEX__][quantity]" type="number" min="1" max="999999" step="1" required class="w-full rounded-lg border border-gray-800 bg-gray-950 p-2 text-xs text-gray-200 focus:border-amber-500 focus:outline-none">
-                                            </div>
-                                            <button type="button" data-remove-item aria-label="Remove battery selection" class="mb-0.5 rounded border border-gray-700 px-2 py-2 text-xs text-gray-400 hover:border-red-700 hover:text-red-300"><i class="fas fa-trash"></i></button>
-                                        </div>
-                                    </template>
+                                        </template>
+                                    @else
+                                        <p class="rounded-lg border border-amber-900/60 bg-amber-950/30 p-3 text-xs text-amber-200">
+                                            Configure component mappings before recording battery sales.
+                                            <a href="{{ route('inventory.battery-models.index') }}" class="font-semibold underline">Map battery models</a>
+                                        </p>
+                                    @endif
                                     @error('battery_items')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
                                 </div>
 
@@ -321,7 +331,7 @@
                                             const fields = row.querySelectorAll('select, input[type="number"]');
 
                                             if (isBattery) {
-                                                fields[0].value = values.name ?? '';
+                                                fields[0].value = values.battery_model_id ?? '';
                                                 fields[1].value = values.quantity ?? 1;
                                             } else {
                                                 fields[0].value = values.inventory_item_id ?? '';
@@ -345,7 +355,9 @@
 
                                         const initialType = ['cash_in', 'cash_out'].includes(state.type) ? state.type : 'cash_in';
                                         type.value = initialType;
-                                        (state.batteryItems.length ? state.batteryItems : [{}]).forEach((item) => addItem('battery', item));
+                                        if (state.hasBatteryOptions) {
+                                            (state.batteryItems.length ? state.batteryItems : [{}]).forEach((item) => addItem('battery', item));
+                                        }
                                         (state.inventoryItems.length ? state.inventoryItems : [{}]).forEach((item) => addItem('inventory', item));
                                         updateSections();
 

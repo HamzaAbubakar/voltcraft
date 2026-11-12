@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests;
 
-use App\Models\CashTransactionItem;
+use App\Models\BatteryModel;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreCapitalFlowRequest extends FormRequest
 {
@@ -40,10 +41,10 @@ class StoreCapitalFlowRequest extends FormRequest
                 'min:1',
                 'max:20',
             ],
-            'battery_items.*.name' => [
+            'battery_items.*.battery_model_id' => [
                 'required',
-                'string',
-                Rule::in(CashTransactionItem::BATTERY_OPTIONS),
+                'integer',
+                Rule::exists('battery_models', 'id'),
             ],
             'battery_items.*.quantity' => [
                 'required',
@@ -70,6 +71,39 @@ class StoreCapitalFlowRequest extends FormRequest
                 'decimal:0,3',
                 'max:999999999.999',
             ],
+        ];
+    }
+
+    /**
+     * Ensure selected battery models have at least one configured component.
+     *
+     * @return array<int, \Closure(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($this->input('type') !== 'cash_in' || $validator->errors()->has('battery_items')) {
+                    return;
+                }
+
+                foreach ($this->input('battery_items', []) as $index => $item) {
+                    $field = "battery_items.{$index}.battery_model_id";
+
+                    if ($validator->errors()->has($field) || ! is_array($item) || ! isset($item['battery_model_id'])) {
+                        continue;
+                    }
+
+                    $hasComponents = BatteryModel::query()
+                        ->whereKey($item['battery_model_id'])
+                        ->whereHas('inventoryItems')
+                        ->exists();
+
+                    if (! $hasComponents) {
+                        $validator->errors()->add($field, 'Map at least one inventory item to this battery model before recording a sale.');
+                    }
+                }
+            },
         ];
     }
 

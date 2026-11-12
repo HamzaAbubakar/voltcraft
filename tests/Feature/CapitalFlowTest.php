@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\BatteryModel;
 use App\Models\CashAccount;
 use App\Models\CashTransaction;
 use App\Models\InventoryItem;
@@ -18,6 +19,28 @@ class CapitalFlowTest extends TestCase
         $user = User::factory()->create();
         $account = CashAccount::factory()->create();
         $inventoryItem = $this->createInventoryItem();
+        $cableItem = $this->createInventoryItem([
+            'sku' => 'INV-000002',
+            'name' => 'Cable Kit',
+            'category' => 'Other',
+            'quantity_on_hand' => '0.000',
+            'unit' => 'sets',
+        ]);
+        BatteryModel::query()
+            ->where('name', '48V Type A (Wall Mount)')
+            ->firstOrFail()
+            ->inventoryItems()
+            ->attach($inventoryItem, ['quantity_per_battery' => '2.000']);
+        BatteryModel::query()
+            ->where('name', '48V Type A (Wall Mount)')
+            ->firstOrFail()
+            ->inventoryItems()
+            ->attach($cableItem, ['quantity_per_battery' => '1.000']);
+        BatteryModel::query()
+            ->where('name', '24V Heavy Duty Pack')
+            ->firstOrFail()
+            ->inventoryItems()
+            ->attach($inventoryItem, ['quantity_per_battery' => '3.000']);
 
         $response = $this->actingAs($user)->post(route('dashboard.capital-flows.store'), [
             'cash_account_id' => $account->id,
@@ -25,8 +48,8 @@ class CapitalFlowTest extends TestCase
             'amount' => '6250.00',
             'transaction_date' => '2026-11-11',
             'battery_items' => [
-                ['name' => '48V Type A (Wall Mount)', 'quantity' => 2],
-                ['name' => '24V Heavy Duty Pack', 'quantity' => 1],
+                ['battery_model_id' => BatteryModel::query()->where('name', '48V Type A (Wall Mount)')->value('id'), 'quantity' => 2],
+                ['battery_model_id' => BatteryModel::query()->where('name', '24V Heavy Duty Pack')->value('id'), 'quantity' => 1],
             ],
         ]);
 
@@ -49,8 +72,27 @@ class CapitalFlowTest extends TestCase
             'quantity' => 1,
             'inventory_item_id' => null,
         ]);
-        $this->assertSame('4.000', $inventoryItem->fresh()->quantity_on_hand);
-        $this->assertDatabaseCount('stock_movements', 0);
+        $this->assertSame('-3.000', $inventoryItem->fresh()->quantity_on_hand);
+        $this->assertSame('-2.000', $cableItem->fresh()->quantity_on_hand);
+        $this->assertDatabaseHas('stock_movements', [
+            'inventory_item_id' => $inventoryItem->id,
+            'user_id' => $user->id,
+            'type' => 'battery_sale',
+            'quantity_change' => '-4.000',
+        ]);
+        $this->assertDatabaseHas('stock_movements', [
+            'inventory_item_id' => $inventoryItem->id,
+            'user_id' => $user->id,
+            'type' => 'battery_sale',
+            'quantity_change' => '-3.000',
+        ]);
+        $this->assertDatabaseHas('stock_movements', [
+            'inventory_item_id' => $cableItem->id,
+            'user_id' => $user->id,
+            'type' => 'battery_sale',
+            'quantity_change' => '-2.000',
+        ]);
+        $this->assertDatabaseCount('stock_movements', 3);
 
         $this->actingAs($user)
             ->get(route('dashboard'))
@@ -154,12 +196,37 @@ class CapitalFlowTest extends TestCase
                 'amount' => '100.00',
                 'transaction_date' => '2026-11-11',
                 'battery_items' => [
-                    ['name' => 'Unknown model', 'quantity' => 1],
+                    ['battery_model_id' => 999, 'quantity' => 1],
                 ],
             ]);
 
-        $response->assertSessionHasErrors('battery_items.0.name');
+        $response->assertSessionHasErrors('battery_items.0.battery_model_id');
         $this->assertDatabaseCount('cash_transactions', 0);
+    }
+
+    public function test_battery_sale_rejects_a_model_without_an_inventory_mapping(): void
+    {
+        $user = User::factory()->create();
+        $account = CashAccount::factory()->create();
+        $batteryModel = BatteryModel::query()
+            ->where('name', '12V Standard Pack')
+            ->firstOrFail();
+
+        $response = $this->actingAs($user)
+            ->from(route('dashboard'))
+            ->post(route('dashboard.capital-flows.store'), [
+                'cash_account_id' => $account->id,
+                'type' => 'cash_in',
+                'amount' => '100.00',
+                'transaction_date' => '2026-11-11',
+                'battery_items' => [
+                    ['battery_model_id' => $batteryModel->id, 'quantity' => 1],
+                ],
+            ]);
+
+        $response->assertSessionHasErrors('battery_items.0.battery_model_id');
+        $this->assertDatabaseCount('cash_transactions', 0);
+        $this->assertDatabaseCount('stock_movements', 0);
     }
 
     public function test_guest_cannot_record_a_capital_flow(): void
