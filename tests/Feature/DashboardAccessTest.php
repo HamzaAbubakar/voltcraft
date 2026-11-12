@@ -51,7 +51,9 @@ class DashboardAccessTest extends TestCase
 
     public function test_dashboard_metrics_reflect_current_inventory_sales_and_cash_balances(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->nonAdmin()->create([
+            'accessible_pages' => ['cash'],
+        ]);
         $cashAccount = CashAccount::factory()->create([
             'name' => 'Demo Sales Account',
             'role' => 'Retail Sales',
@@ -116,6 +118,10 @@ class DashboardAccessTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Demo Sales Account')
+            ->assertSee('Battery Type Sales Volume Breakdown')
+            ->assertSee('Cash Accounts & Held Capital Pipeline', false)
+            ->assertSee('Post New Capital Flow Activity')
+            ->assertSee('Real-time Account Activity Logs')
             ->assertSee('Rs 1,750.00')
             ->assertSee('Rs 2,000.00')
             ->assertSee('Rs 250.00')
@@ -127,5 +133,39 @@ class DashboardAccessTest extends TestCase
             ->assertViewHas('batterySales', function ($batterySales): bool {
                 return $batterySales->firstWhere('name', '12V Standard Pack')['quantity'] === 2.0;
             });
+    }
+
+    public function test_users_without_cash_access_can_view_dashboard_without_cash_flow_data_or_actions(): void
+    {
+        $cashAccount = CashAccount::factory()->create([
+            'name' => 'Restricted Cash Account',
+        ]);
+        CashTransaction::factory()->for($cashAccount)->create([
+            'description' => 'Restricted cash transaction',
+            'amount' => '98765.00',
+        ]);
+        $user = User::factory()->nonAdmin()->create([
+            'accessible_pages' => [],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk()
+            ->assertSee('Dashboard Ledger')
+            ->assertSee('Critical Low Stock Inventory Watchlist')
+            ->assertDontSee('Battery Type Sales Volume Breakdown')
+            ->assertDontSee('Cash Accounts & Held Capital Pipeline', false)
+            ->assertDontSee('Restricted Cash Account')
+            ->assertDontSee('Restricted cash transaction')
+            ->assertDontSee('Post New Capital Flow Activity')
+            ->assertDontSee('Real-time Account Activity Logs')
+            ->assertViewHas('canAccessCash', false)
+            ->assertViewHas('cashAccounts', fn ($cashAccounts): bool => $cashAccounts->isEmpty())
+            ->assertViewHas('cashAccountSummaries', fn ($cashAccountSummaries): bool => $cashAccountSummaries->isEmpty())
+            ->assertViewHas('batterySales', fn ($batterySales): bool => $batterySales->isEmpty())
+            ->assertViewHas('recentTransactions', fn ($recentTransactions): bool => $recentTransactions->isEmpty());
+
+        $this->post(route('dashboard.capital-flows.store'))
+            ->assertForbidden();
     }
 }

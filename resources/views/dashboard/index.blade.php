@@ -114,6 +114,7 @@
                     @endif
                 </div>
 
+                @if ($canAccessCash)
                 <div>
                     <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Battery Type Sales Volume Breakdown ({{ $salesMonth }})</h3>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -482,5 +483,6 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
 @endsection

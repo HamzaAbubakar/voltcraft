@@ -26,5 +26,6 @@ class DatabaseSeederTest extends TestCase
 
         $this->assertSame('Voltcraft Administrator', $user->name);
         $this->assertTrue(Hash::check('a-strong-test-password', $user->password));
+        $this->assertTrue($user->is_admin);
     }
 }

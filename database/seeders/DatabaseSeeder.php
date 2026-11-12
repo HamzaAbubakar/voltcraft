@@ -27,6 +27,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => config('app.seed_admin_name'),
                 'password' => $password,
+                'is_admin' => true,
+                'accessible_pages' => null,
             ],
         );
     }
