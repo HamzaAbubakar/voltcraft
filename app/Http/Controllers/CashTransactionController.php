@@ -50,6 +50,12 @@ class CashTransactionController extends Controller
                 ->with('warning', 'Capital-flow transactions with item details cannot be edited from this form.');
         }
 
+        if ($cashTransaction->investmentPrincipal()->exists() || $cashTransaction->investmentSettlement()->exists()) {
+            return redirect()
+                ->route('investments.index')
+                ->with('warning', 'Investment transactions must be managed through the Investments module.');
+        }
+
         return view('cash.transactions.form', [
             'cashTransaction' => $cashTransaction,
             'cashAccounts' => CashAccount::query()
@@ -66,6 +72,11 @@ class CashTransactionController extends Controller
     {
         abort_if($cashTransaction->expense()->exists(), 403, 'Linked expense transactions must be edited through the Expenses module.');
         abort_if($cashTransaction->items()->exists(), 403, 'Capital-flow transactions with item details cannot be edited from this form.');
+        abort_if(
+            $cashTransaction->investmentPrincipal()->exists() || $cashTransaction->investmentSettlement()->exists(),
+            403,
+            'Investment transactions must be managed through the Investments module.',
+        );
 
         $cashTransaction->update($request->validate($this->transactionRules($cashTransaction)));
 

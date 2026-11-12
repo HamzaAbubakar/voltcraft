@@ -7,6 +7,7 @@ use App\Models\CashAccount;
 use App\Models\CashTransaction;
 use App\Models\CashTransactionItem;
 use App\Models\InventoryItem;
+use App\Models\Investment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
 
@@ -46,6 +47,12 @@ class DashboardController extends Controller
                 ->orderBy('name')
                 ->orderBy('id')
                 ->get(['id', 'name', 'role', 'is_active']),
+            'dueInvestments' => Investment::query()
+                ->where('status', 'active')
+                ->whereDate('maturity_date', '<=', $now->copy()->addDays(3)->toDateString())
+                ->orderBy('maturity_date')
+                ->orderBy('id')
+                ->get(['id', 'investor_name', 'principal_amount', 'maturity_date']),
             'inventoryItems' => InventoryItem::query()
                 ->orderBy('name')
                 ->orderBy('id')

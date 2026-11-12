@@ -15,6 +15,42 @@
                         </ul>
                     </div>
                 @endif
+                @if ($dueInvestments->isNotEmpty())
+                    <section role="alert" class="rounded-2xl border border-amber-800/60 bg-gradient-to-r from-amber-950/40 to-gray-900 p-5">
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-amber-200">Investment repayments need attention</h2>
+                                <p class="mt-1 text-xs text-gray-400">Active investments due within 3 days or past their return date.</p>
+                            </div>
+                            <a href="{{ route('investments.index') }}" class="text-xs font-semibold text-amber-400 hover:text-amber-300">View investments <i class="fas fa-arrow-right ml-1"></i></a>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            @foreach ($dueInvestments as $investment)
+                                @php
+                                    $daysUntilMaturity = (int) today()->diffInDays($investment->maturity_date, false);
+                                @endphp
+                                <div class="rounded-xl border {{ $daysUntilMaturity < 0 ? 'border-red-900/70 bg-red-950/30' : 'border-gray-800 bg-gray-900/80' }} p-4">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-200">{{ $investment->investor_name }}</p>
+                                            <p class="mt-1 text-xs text-gray-400">Return due {{ $investment->maturity_date->format('M d, Y') }}</p>
+                                        </div>
+                                        <span class="whitespace-nowrap rounded border px-2 py-0.5 text-xs font-semibold {{ $daysUntilMaturity < 0 ? 'border-red-800 bg-red-950 text-red-300' : 'border-amber-800 bg-amber-950 text-amber-300' }}">
+                                            @if ($daysUntilMaturity < 0)
+                                                Overdue {{ abs($daysUntilMaturity) }} {{ abs($daysUntilMaturity) === 1 ? 'day' : 'days' }}
+                                            @elseif ($daysUntilMaturity === 0)
+                                                Due today
+                                            @else
+                                                Due in {{ $daysUntilMaturity }} {{ $daysUntilMaturity === 1 ? 'day' : 'days' }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <p class="mt-3 font-mono text-sm font-semibold text-white">Rs {{ number_format((float) $investment->principal_amount, 2) }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
                 <!-- Row 1: Low Stock Alerts Header Banner -->
                 <div class="rounded-2xl border p-5 {{ $lowStockCount > 0 ? 'border-red-900/50 bg-gradient-to-r from-red-950/30 to-amber-950/20' : 'border-emerald-900/50 bg-gradient-to-r from-emerald-950/20 to-gray-900' }}">
                     <div class="mb-4 flex items-center justify-between">

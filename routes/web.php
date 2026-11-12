@@ -11,6 +11,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDailyCompensationController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkforceController;
 use Illuminate\Support\Facades\Artisan;
@@ -74,6 +75,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::get('/expenses/{expense}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
     Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
+    Route::get('/investments', [InvestmentController::class, 'index'])->name('investments.index');
+    Route::get('/investments/create', [InvestmentController::class, 'create'])->name('investments.create');
+    Route::post('/investments', [InvestmentController::class, 'store'])->name('investments.store');
+    Route::get('/investments/{investment}/edit', [InvestmentController::class, 'edit'])->name('investments.edit');
+    Route::put('/investments/{investment}', [InvestmentController::class, 'update'])->name('investments.update');
+    Route::get('/investments/{investment}/settle', [InvestmentController::class, 'createSettlement'])
+        ->name('investments.settlement.create');
+    Route::post('/investments/{investment}/settle', [InvestmentController::class, 'settle'])
+        ->name('investments.settlement.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

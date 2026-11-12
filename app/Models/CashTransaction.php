@@ -65,6 +65,26 @@ class CashTransaction extends Model
     }
 
     /**
+     * Get the investment funded by the transaction, if any.
+     *
+     * @return HasOne<Investment, $this>
+     */
+    public function investmentPrincipal(): HasOne
+    {
+        return $this->hasOne(Investment::class, 'initial_cash_transaction_id');
+    }
+
+    /**
+     * Get the investment settled by the transaction, if any.
+     *
+     * @return HasOne<Investment, $this>
+     */
+    public function investmentSettlement(): HasOne
+    {
+        return $this->hasOne(Investment::class, 'settlement_cash_transaction_id');
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
