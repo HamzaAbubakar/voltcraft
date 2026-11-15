@@ -1,5 +1,5 @@
         <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col justify-between shrink-0">
+        <aside id="dashboard-sidebar" aria-hidden="true" class="dashboard-sidebar fixed left-0 z-40 w-64 -translate-x-full bg-gray-900 border-r border-gray-800 p-4 flex flex-col justify-between shrink-0 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0">
             <div class="space-y-1">
                 <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Core Modules</p>
                 

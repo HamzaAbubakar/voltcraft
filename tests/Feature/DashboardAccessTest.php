@@ -49,6 +49,18 @@ class DashboardAccessTest extends TestCase
         }
     }
 
+    public function test_dashboard_renders_mobile_sidebar_controls(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('data-sidebar-toggle', false)
+            ->assertSee('aria-controls="dashboard-sidebar"', false)
+            ->assertSee('id="dashboard-sidebar"', false)
+            ->assertSee('data-sidebar-overlay', false);
+    }
+
     public function test_dashboard_metrics_reflect_current_inventory_sales_and_cash_balances(): void
     {
         $user = User::factory()->nonAdmin()->create([

@@ -12,10 +12,14 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #4B5563; }
         .dashboard-topbar { padding-top: calc(1rem + var(--inset-top, 0px)); }
+        .dashboard-sidebar { top: calc(73px + var(--inset-top, 0px)); bottom: 0; }
+        .dashboard-sidebar-overlay { top: calc(73px + var(--inset-top, 0px)); }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased custom-scrollbar">
     @include('dashboard.partials.topbar')
+
+    <button type="button" data-sidebar-overlay aria-label="Close navigation menu" class="dashboard-sidebar-overlay fixed inset-x-0 bottom-0 z-30 hidden bg-gray-950/75 lg:hidden"></button>
 
     <div class="flex min-h-[calc(100vh-73px)]">
         @include('dashboard.partials.sidebar')
@@ -25,5 +29,52 @@
         </main>
     </div>
     @stack('scripts')
+    <script>
+        (() => {
+            const sidebar = document.getElementById('dashboard-sidebar');
+            const toggle = document.querySelector('[data-sidebar-toggle]');
+            const overlay = document.querySelector('[data-sidebar-overlay]');
+            const desktopViewport = window.matchMedia('(min-width: 1024px)');
+            let isOpen = false;
+
+            const updateSidebar = () => {
+                const isDesktop = desktopViewport.matches;
+                sidebar.classList.toggle('-translate-x-full', !isDesktop && !isOpen);
+                sidebar.setAttribute('aria-hidden', String(!isDesktop && !isOpen));
+                sidebar.inert = !isDesktop && !isOpen;
+                toggle.setAttribute('aria-expanded', String(isDesktop || isOpen));
+                toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+                overlay.classList.toggle('hidden', isDesktop || !isOpen);
+            };
+
+            const closeSidebar = () => {
+                isOpen = false;
+                updateSidebar();
+            };
+
+            toggle.addEventListener('click', () => {
+                isOpen = !isOpen;
+                updateSidebar();
+            });
+            overlay.addEventListener('click', closeSidebar);
+            sidebar.addEventListener('click', (event) => {
+                if (!desktopViewport.matches && event.target.closest('a')) {
+                    closeSidebar();
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && isOpen) {
+                    closeSidebar();
+                    toggle.focus();
+                }
+            });
+            desktopViewport.addEventListener('change', () => {
+                isOpen = false;
+                updateSidebar();
+            });
+
+            updateSidebar();
+        })();
+    </script>
 </body>
 </html>
