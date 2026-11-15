@@ -1,5 +1,5 @@
     <!-- Top Navigation Bar -->
-    <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+    <header class="dashboard-topbar bg-gray-900 border-b border-gray-800 sticky top-0 z-50 px-6 pb-4 flex items-center justify-between">
         <div class="flex items-center space-x-3">
             <div class="bg-amber-500 text-gray-950 p-2 rounded-xl font-black text-xl shadow-lg shadow-amber-500/10">
                 <i class="fas fa-charging-station"></i>

@@ -26,7 +26,8 @@ class InvestmentController extends Controller
                 ->orderBy('status')
                 ->orderBy('maturity_date')
                 ->orderBy('id')
-                ->get(),
+                ->paginate(15)
+                ->withQueryString(),
             'activePrincipalTotal' => Investment::query()
                 ->where('status', 'active')
                 ->sum('principal_amount'),

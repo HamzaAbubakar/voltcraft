@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\StreamedResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -58,6 +60,45 @@ class InventoryController extends Controller
             'lowStockItems' => $lowStockItems,
             'inventoryValue' => $inventoryValue,
         ]);
+    }
+
+    public function export(): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="inventory_export.csv"',
+        ];
+
+        $callback = function () {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, [
+                'SKU',
+                'Name',
+                'Category',
+                'Unit',
+                'Quantity On Hand',
+                'Reorder Point',
+                'Unit Cost',
+                'Inventory Value',
+            ]);
+
+            foreach (InventoryItem::query()->orderBy('name')->orderBy('id')->cursor() as $item) {
+                fputcsv($handle, [
+                    $item->sku,
+                    $item->name,
+                    $item->category,
+                    $item->unit,
+                    number_format((float) $item->quantity_on_hand, 3),
+                    number_format((float) $item->reorder_point, 3),
+                    number_format((float) $item->unit_cost, 2),
+                    number_format((float) $item->quantity_on_hand * (float) $item->unit_cost, 2),
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function create(): View
@@ -140,7 +181,7 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function storeMovement(Request $request): RedirectResponse
+    public function storeMovement(Request $request, NotificationService $notificationService): RedirectResponse
     {
         $validated = $request->validate([
             'inventory_item_id' => [
@@ -186,6 +227,19 @@ class InventoryController extends Controller
                 'note' => $validated['note'] ?? null,
             ]);
         });
+
+        // Alert when a stock decrease brings an item to/below its reorder point.
+        if ($quantityChange < 0) {
+            $item = InventoryItem::query()->findOrFail($validated['inventory_item_id']);
+            if ((float) $item->quantity_on_hand <= (float) $item->reorder_point) {
+                $notificationService->lowStockAlert(
+                    $item->sku,
+                    $item->name,
+                    (float) $item->quantity_on_hand,
+                    (float) $item->reorder_point,
+                );
+            }
+        }
 
         return redirect()
             ->route('inventory.show', $validated['inventory_item_id'])

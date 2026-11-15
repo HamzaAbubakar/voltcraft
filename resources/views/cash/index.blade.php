@@ -18,6 +18,9 @@
             <a href="{{ route('cash.transactions.create') }}" class="inline-flex items-center justify-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-gray-950 shadow-lg shadow-amber-500/10 transition-colors hover:bg-amber-400">
                 <i class="fas fa-plus mr-2"></i>Record Transaction
             </a>
+            <a href="{{ route('cash.export') }}" class="inline-flex items-center justify-center rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-xs font-semibold text-gray-200 transition-colors hover:bg-gray-800">
+                <i class="fas fa-download mr-2"></i>Export CSV
+            </a>
         </div>
     </div>
 

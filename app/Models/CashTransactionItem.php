@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'cash_transaction_id',
     'inventory_item_id',
+    'battery_model_id',
     'item_name',
     'quantity',
 ])]
@@ -32,6 +33,16 @@ class CashTransactionItem extends Model
     public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class);
+    }
+
+    /**
+     * Get the battery model associated with a battery-sale line.
+     *
+     * @return BelongsTo<BatteryModel, $this>
+     */
+    public function batteryModel(): BelongsTo
+    {
+        return $this->belongsTo(BatteryModel::class);
     }
 
     /**

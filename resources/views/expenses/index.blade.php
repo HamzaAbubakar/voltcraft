@@ -94,6 +94,10 @@
                 </table>
             </div>
         </div>
+
+        <div class="mt-4 flex justify-center">
+            {{ $expenses->links() }}
+        </div>
     </div>
 
     <div class="space-y-4">

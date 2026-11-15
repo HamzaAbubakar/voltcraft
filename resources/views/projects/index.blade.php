@@ -10,6 +10,9 @@
         <a href="{{ route('projects.create') }}" class="shrink-0 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-gray-950 transition hover:bg-amber-400">
             <i class="fas fa-plus mr-2"></i>New project
         </a>
+        <a href="{{ route('projects.export') }}" class="shrink-0 rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-xs font-semibold text-gray-200 transition-colors hover:bg-gray-800">
+            <i class="fas fa-download mr-2"></i>Export CSV
+        </a>
     </div>
 
     @if (session('success'))

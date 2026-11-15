@@ -44,7 +44,7 @@
                 <h3 class="text-sm font-semibold text-white">Investment Records</h3>
                 <p class="mt-1 text-xs text-gray-500">Profit payout is entered manually when you record repayment.</p>
             </div>
-            <span class="text-xs text-gray-500">{{ $investments->count() }} {{ $investments->count() === 1 ? 'record' : 'records' }}</span>
+            <span class="text-xs text-gray-500">{{ $investments->total() }} {{ $investments->total() === 1 ? 'record' : 'records' }}</span>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full min-w-[980px] border-collapse text-left text-xs">
@@ -108,6 +108,10 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="mt-4 flex justify-center">
+        {{ $investments->links() }}
     </div>
 </div>
 @endsection

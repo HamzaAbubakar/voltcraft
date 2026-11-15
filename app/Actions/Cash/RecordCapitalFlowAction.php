@@ -6,11 +6,16 @@ use App\Models\BatteryModel;
 use App\Models\CashTransaction;
 use App\Models\InventoryItem;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class RecordCapitalFlowAction
 {
+    public function __construct(
+        private readonly NotificationService $notificationService,
+    ) {}
+
     /**
      * Record a cash transaction and its associated battery or inventory lines.
      *
@@ -101,6 +106,8 @@ class RecordCapitalFlowAction
             }
 
             $transaction->items()->create([
+                'inventory_item_id' => null,
+                'battery_model_id' => $item['battery_model_id'],
                 'item_name' => $batteryModel->name,
                 'quantity' => $item['quantity'],
             ]);
@@ -144,6 +151,16 @@ class RecordCapitalFlowAction
                 'quantity_on_hand',
                 $this->formatThousandths($quantityInThousandths),
             );
+
+            $freshItem = InventoryItem::query()->find($inventoryItem->id);
+            if ($freshItem !== null && (float) $freshItem->quantity_on_hand <= (float) $freshItem->reorder_point) {
+                $this->notificationService->lowStockAlert(
+                    $freshItem->sku,
+                    $freshItem->name,
+                    (float) $freshItem->quantity_on_hand,
+                    (float) $freshItem->reorder_point,
+                );
+            }
         }
 
         foreach ($movementLines as $movementLine) {

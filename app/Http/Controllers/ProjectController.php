@@ -9,6 +9,7 @@ use App\Models\ProjectExpense;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\StreamedResponse;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
@@ -38,6 +39,59 @@ class ProjectController extends Controller
             'siteExpensesTotal' => $siteExpensesTotal,
             'netProfitTotal' => round((float) $totals->gross_margin_total - $siteExpensesTotal, 2),
         ]);
+    }
+
+    public function export(): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="projects_export.csv"',
+        ];
+
+        $callback = function () {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, [
+                'Project Name',
+                'Customer',
+                'Site Location',
+                'System Size (W)',
+                'Customer Rate (W)',
+                'Outsourced Rate (W)',
+                'Contract Value',
+                'Outsourcing Cost',
+                'Gross Margin',
+                'Status',
+                'Start Date',
+                'Completed Date',
+                'Assigned Employee',
+            ]);
+
+            foreach (Project::query()
+                ->with('assignedEmployee:id,name')
+                ->orderByDesc('start_date')
+                ->orderByDesc('id')
+                ->cursor() as $project) {
+                fputcsv($handle, [
+                    $project->name,
+                    $project->customer_name,
+                    $project->site_location,
+                    $project->system_size_watts,
+                    number_format((float) $project->customer_rate_per_watt, 2),
+                    number_format((float) $project->outsourced_rate_per_watt, 2),
+                    number_format((float) $project->contract_value, 2),
+                    number_format((float) $project->outsourcing_cost, 2),
+                    number_format((float) $project->gross_margin, 2),
+                    $project->status,
+                    $project->start_date?->format('Y-m-d'),
+                    $project->completed_date?->format('Y-m-d'),
+                    $project->assignedEmployee?->name ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function create(): View

@@ -40,7 +40,8 @@ class ExpenseController extends Controller
             ->with(['description', 'cashTransaction.cashAccount'])
             ->orderByDesc('transactions.transaction_date')
             ->orderByDesc('expenses.id')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
         $expenseTotal = CashTransaction::query()
             ->where('type', 'cash_out')
@@ -73,8 +74,8 @@ class ExpenseController extends Controller
             'expenses' => $expenses,
             'expenseDescriptions' => ExpenseDescription::query()->orderBy('name')->get(['id', 'name']),
             'expenseTotal' => $expenseTotal,
-            'expenseCount' => $expenses->count(),
-            'expenseAverage' => $expenses->isEmpty() ? 0 : $expenseTotal / $expenses->count(),
+            'expenseCount' => (int) $expenses->total(),
+            'expenseAverage' => $expenses->total() === 0 ? 0 : $expenseTotal / (float) $expenses->total(),
             'categoryBreakdown' => $categoryBreakdown,
             'salespersonBreakdown' => $salespersonBreakdown,
             'period' => $period,

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\BatteryModel;
 use App\Models\CashAccount;
 use App\Models\CashTransaction;
+use App\Models\CashTransactionItem;
 use App\Models\InventoryItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,11 +67,13 @@ class CapitalFlowTest extends TestCase
             'item_name' => '48V Type A (Wall Mount)',
             'quantity' => 2,
             'inventory_item_id' => null,
+            'battery_model_id' => BatteryModel::query()->where('name', '48V Type A (Wall Mount)')->value('id'),
         ]);
         $this->assertDatabaseHas('cash_transaction_items', [
             'item_name' => '24V Heavy Duty Pack',
             'quantity' => 1,
             'inventory_item_id' => null,
+            'battery_model_id' => BatteryModel::query()->where('name', '24V Heavy Duty Pack')->value('id'),
         ]);
         $this->assertSame('-3.000', $inventoryItem->fresh()->quantity_on_hand);
         $this->assertSame('-2.000', $cableItem->fresh()->quantity_on_hand);
@@ -233,6 +236,40 @@ class CapitalFlowTest extends TestCase
     {
         $this->post(route('dashboard.capital-flows.store'))
             ->assertRedirect(route('login'));
+    }
+
+    public function test_battery_sale_line_items_are_linked_by_foreign_key_not_name(): void
+    {
+        $user = User::factory()->create();
+        $account = CashAccount::factory()->create();
+        $inventoryItem = $this->createInventoryItem();
+        $batteryModel = BatteryModel::query()
+            ->where('name', '48V Type A (Wall Mount)')
+            ->firstOrFail();
+        $batteryModel->inventoryItems()->attach($inventoryItem, ['quantity_per_battery' => '2.000']);
+
+        $this->actingAs($user)->post(route('dashboard.capital-flows.store'), [
+            'cash_account_id' => $account->id,
+            'type' => 'cash_in',
+            'amount' => '100.00',
+            'transaction_date' => '2026-11-11',
+            'battery_items' => [
+                ['battery_model_id' => $batteryModel->id, 'quantity' => 1],
+            ],
+        ]);
+
+        $line = CashTransactionItem::query()
+            ->where('battery_model_id', $batteryModel->id)
+            ->first();
+        $this->assertNotNull($line);
+        $this->assertSame($batteryModel->id, $line->battery_model_id);
+
+        // Renaming the battery model must not break the FK-backed link.
+        $batteryModel->update(['name' => 'Renamed Battery Model']);
+        $this->assertDatabaseHas('cash_transaction_items', [
+            'id' => $line->id,
+            'battery_model_id' => $batteryModel->fresh()->id,
+        ]);
     }
 
     public function test_capital_flow_with_item_lines_cannot_be_edited_through_the_cash_form(): void

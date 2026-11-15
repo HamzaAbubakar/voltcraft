@@ -66,6 +66,11 @@
                         <i class="fas fa-user-shield text-base"></i>
                         <span>User Management</span>
                     </a>
+
+                    <a href="{{ route('control-panel.index') }}" aria-current="{{ request()->routeIs('control-panel.*') ? 'page' : 'false' }}" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('control-panel.*') ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/10 font-semibold' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}">
+                        <i class="fas fa-sliders-h text-base"></i>
+                        <span>Control Panel</span>
+                    </a>
                 @endif
 
             </div>

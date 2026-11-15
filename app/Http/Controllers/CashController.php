@@ -6,6 +6,7 @@ use App\Models\CashAccount;
 use App\Models\CashTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\StreamedResponse;
 use Illuminate\View\View;
 
 class CashController extends Controller
@@ -57,5 +58,44 @@ class CashController extends Controller
             'transactions' => $transactions,
             'search' => $search,
         ]);
+    }
+
+    public function export(): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="cash_export.csv"',
+        ];
+
+        $callback = function () {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, [
+                'Date',
+                'Account',
+                'Type',
+                'Amount',
+                'Description',
+                'Note',
+            ]);
+
+            foreach (CashTransaction::query()
+                ->with('cashAccount:id,name')
+                ->orderByDesc('transaction_date')
+                ->orderByDesc('id')
+                ->cursor() as $transaction) {
+                fputcsv($handle, [
+                    $transaction->transaction_date->format('Y-m-d'),
+                    $transaction->cashAccount->name,
+                    $transaction->type,
+                    number_format((float) $transaction->amount, 2),
+                    $transaction->description,
+                    $transaction->note ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

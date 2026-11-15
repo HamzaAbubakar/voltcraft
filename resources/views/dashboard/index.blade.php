@@ -15,6 +15,17 @@
                         </ul>
                     </div>
                 @endif
+                @if ($showDbBackupAlert)
+                    <div role="alert" class="rounded-2xl border border-blue-800/60 bg-gradient-to-r from-blue-950/40 to-gray-900 p-5">
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-blue-200">Database Backup Reminder</h2>
+                                <p class="mt-1 text-xs text-gray-400">It has been 7 days or more since the last database backup was downloaded. Please download a backup from the Control Panel.</p>
+                            </div>
+                            <a href="{{ route('control-panel.download-db') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300">Download Backup <i class="fas fa-arrow-right ml-1"></i></a>
+                        </div>
+                    </div>
+                @endif
                 @if ($dueInvestments->isNotEmpty())
                     <section role="alert" class="rounded-2xl border border-amber-800/60 bg-gradient-to-r from-amber-950/40 to-gray-900 p-5">
                         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">

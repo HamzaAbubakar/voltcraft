@@ -5,6 +5,7 @@ use App\Http\Controllers\CapitalFlowController;
 use App\Http\Controllers\CashAccountController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\CashTransactionController;
+use App\Http\Controllers\ControlPanelController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeCompensationController;
 use App\Http\Controllers\EmployeeController;
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
             ->name('inventory.movements.create');
         Route::post('/inventory-movements', [InventoryController::class, 'storeMovement'])
             ->name('inventory.movements.store');
+        Route::get('/inventory/export', [InventoryController::class, 'export'])->name('inventory.export');
     });
 
     Route::middleware('page.access:cash')->group(function () {
@@ -59,6 +61,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/cash/transactions', [CashTransactionController::class, 'store'])->name('cash.transactions.store');
         Route::get('/cash/transactions/{cashTransaction}/edit', [CashTransactionController::class, 'edit'])->name('cash.transactions.edit');
         Route::put('/cash/transactions/{cashTransaction}', [CashTransactionController::class, 'update'])->name('cash.transactions.update');
+        Route::get('/cash/export', [CashController::class, 'export'])->name('cash.export');
     });
 
     Route::middleware('page.access:workforce')->group(function () {
@@ -100,6 +103,7 @@ Route::middleware('auth')->group(function () {
             ->name('projects.expenses.create');
         Route::post('/projects/{project}/expenses', [ProjectExpenseController::class, 'store'])
             ->name('projects.expenses.store');
+        Route::get('/projects/export', [ProjectController::class, 'export'])->name('projects.export');
     });
 
     Route::middleware('page.access:investments')->group(function () {
@@ -121,6 +125,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::middleware('admin')->group(function () {
+        Route::get('/control-panel', [ControlPanelController::class, 'index'])->name('control-panel.index');
+        Route::post('/control-panel/recipients', [ControlPanelController::class, 'storeRecipient'])->name('control-panel.recipients.store');
+        Route::delete('/control-panel/recipients/{recipient}', [ControlPanelController::class, 'destroyRecipient'])->name('control-panel.recipients.destroy');
+        Route::get('/control-panel/download-db', [ControlPanelController::class, 'downloadDb'])->name('control-panel.download-db');
+    });
 });
 
 require __DIR__.'/auth.php';
