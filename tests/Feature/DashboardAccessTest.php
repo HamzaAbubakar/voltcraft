@@ -58,7 +58,9 @@ class DashboardAccessTest extends TestCase
             ->assertSee('data-sidebar-toggle', false)
             ->assertSee('aria-controls="dashboard-sidebar"', false)
             ->assertSee('id="dashboard-sidebar"', false)
-            ->assertSee('data-sidebar-overlay', false);
+            ->assertSee('data-sidebar-overlay', false)
+            ->assertSee('viewport-fit=cover', false)
+            ->assertSee('safe-area-inset-top', false);
     }
 
     public function test_dashboard_metrics_reflect_current_inventory_sales_and_cash_balances(): void

@@ -42,7 +42,7 @@ php artisan native:run android --start-url=/erp --no-tty
 - `routes/mobile.php`: local app route (`/erp`) and the component it opens.
 - `config/nativephp.php`: NativePHP settings, including the default `start_url`, Android SDK/build settings, and Android image output format. The icon and splash source files are in `public/`, not this config.
 - `.env`: optional NativePHP overrides, such as `NATIVEPHP_APP_ID` and `NATIVEPHP_START_URL`. The build command's `--start-url=/erp` explicitly selects the launch route for this Android build.
-- The dashboard top bar uses NativePHP's injected `--inset-top` safe-area value so its logo and sign-out button sit below the phone status icons. Because the WebView opens the hosted site URL, deploy changes to the dashboard Blade views to that web server; a native APK rebuild is not needed for remote website updates.
+- The dashboard top bar uses the larger of NativePHP's injected `--inset-top` value and the browser's `safe-area-inset-top`, with `viewport-fit=cover`, so its controls sit below the phone status icons and camera cutout. Because the WebView opens the hosted site URL, deploy changes to the dashboard Blade views to that web server; a native APK rebuild is not needed for remote website updates.
 
 ## Windows prerequisites
 

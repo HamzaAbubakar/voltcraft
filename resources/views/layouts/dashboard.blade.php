@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{{ config('app.name', 'Voltcraft ERP') }}</title>
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,9 +11,10 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #4B5563; }
-        .dashboard-topbar { padding-top: calc(1rem + var(--inset-top, 0px)); }
-        .dashboard-sidebar { top: calc(73px + var(--inset-top, 0px)); bottom: 0; }
-        .dashboard-sidebar-overlay { top: calc(73px + var(--inset-top, 0px)); }
+        :root { --dashboard-safe-top: max(env(safe-area-inset-top, 0px), var(--inset-top, 0px)); }
+        .dashboard-topbar { padding-top: calc(1rem + var(--dashboard-safe-top)); }
+        .dashboard-sidebar { top: calc(73px + var(--dashboard-safe-top)); bottom: 0; }
+        .dashboard-sidebar-overlay { top: calc(73px + var(--dashboard-safe-top)); }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased custom-scrollbar">
