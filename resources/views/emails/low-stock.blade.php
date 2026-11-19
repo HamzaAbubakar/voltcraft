@@ -1,4 +1,3 @@
-@component('mail::message')
 # Low Stock Alert
 
 The following inventory item has fallen to or below its reorder point:
@@ -11,4 +10,3 @@ The following inventory item has fallen to or below its reorder point:
 Please restock this item to avoid stockouts.
 
 {{ config('app.name', 'Voltcraft ERP') }}
-@endcomponent

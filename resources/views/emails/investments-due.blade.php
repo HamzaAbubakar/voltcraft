@@ -1,4 +1,3 @@
-@component('mail::message')
 # Investment Repayments Due
 
 The following {{ count($investments) }} investment(s) are due within 3 days or past their return date:
@@ -10,4 +9,3 @@ The following {{ count($investments) }} investment(s) are due within 3 days or p
 Please review and record settlements in the Investments module.
 
 {{ config('app.name', 'Voltcraft ERP') }}
-@endcomponent
