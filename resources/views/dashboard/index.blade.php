@@ -496,4 +496,62 @@
                 </div>
                 @endif
             </div>
+        @push('scripts')
+        <script>
+            (function () {
+                // Only register push tokens when running inside the NativePHP
+                // Android WebView (remote hosted site). Detected via a marker
+                // the native side injects into the page, falling back to a UA check.
+                var isNativeWebView = (function () {
+                    try {
+                        return !!(window.VoltcraftNative || /NativePHP/.test(navigator.userAgent || ''));
+                    } catch (e) {
+                        return false;
+                    }
+                })();
+
+                window.VoltcraftPush = {
+                    registerToken: function (token) {
+                        if (!token || !isNativeWebView) {
+                            return;
+                        }
+                        fetch('{{ route('push-devices.register') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            },
+                            body: new URLSearchParams({
+                                fcm_token: token,
+                                device_name: 'Voltcraft Android',
+                            }),
+                        }).then(function (response) {
+                            if (!response.ok) {
+                                throw new Error('Token registration failed with status ' + response.status);
+                            }
+                        }).catch(function (err) {
+                            console.warn('VoltcraftPush: token registration failed', err);
+                        });
+                    },
+                    onPushReceived: function (title, body, url) {
+                        // In-page toast surfaced by the native side when a push
+                        // arrives while the dashboard is foregrounded.
+                        var toast = document.createElement('div');
+                        toast.className = 'fixed top-5 left-1/2 -translate-x-1/2 z-50 rounded-lg border border-amber-500 bg-amber-900/90 px-4 py-3 text-sm text-amber-100 shadow-2xl';
+                        toast.innerHTML = '<strong>' + escapeHtml(title) + '</strong><p class="mt-1 text-xs text-amber-200">' + escapeHtml(body) + '</p>';
+                        document.body.appendChild(toast);
+                        setTimeout(function () { toast.remove(); }, 6000);
+                    },
+                };
+
+                function escapeHtml(text) {
+                    var div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+            })();
+        </script>
+        @endpush
+
 @endsection

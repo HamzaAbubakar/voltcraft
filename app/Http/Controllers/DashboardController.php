@@ -70,6 +70,15 @@ class DashboardController extends Controller
             && ($lastDbBackupDownloadedAt === null
                 || now()->diffInDays($lastDbBackupDownloadedAt) >= 7);
 
+        // Send a one-per-day push reminder when a DB backup is due.
+        if ($showDbBackupAlert && auth()->user()->is_admin) {
+            $lastPush = SystemSetting::get('last_push_db_backup_at');
+            if ($lastPush === null || now()->diffInHours($lastPush) >= 24) {
+                $this->notificationService->dbBackupReminder();
+                SystemSetting::set('last_push_db_backup_at', now());
+            }
+        }
+
         return view('dashboard.index', [
             'canAccessCash' => $canAccessCash,
             'cashAccounts' => $canAccessCash

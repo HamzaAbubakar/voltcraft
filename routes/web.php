@@ -16,6 +16,7 @@ use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectExpenseController;
+use App\Http\Controllers\PushDeviceController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WorkforceController;
 use Illuminate\Support\Facades\Artisan;
@@ -33,6 +34,8 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/api/push-devices/register', [PushDeviceController::class, 'register'])
+        ->name('push-devices.register');
     Route::post('/dashboard/capital-flows', [CapitalFlowController::class, 'store'])
         ->middleware('page.access:cash')
         ->name('dashboard.capital-flows.store');

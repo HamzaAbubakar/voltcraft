@@ -38,4 +38,9 @@ class User extends Authenticatable
             || $this->is_admin
             || in_array($page, $this->accessible_pages ?? [], true);
     }
+
+    public function notificationDevices()
+    {
+        return $this->hasMany(NotificationDevice::class);
+    }
 }
