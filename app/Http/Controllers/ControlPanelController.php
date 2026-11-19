@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\NotificationDevice;
 use App\Models\NotificationRecipient;
 use App\Models\SystemSetting;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,16 @@ class ControlPanelController extends Controller
     {
         $recipients = NotificationRecipient::query()->orderBy('email')->get();
 
+        $devices = NotificationDevice::query()
+            ->with('user')
+            ->orderByDesc('last_used_at')
+            ->get();
+
+        $apkPath = storage_path('app/apk/app-debug.apk');
+        $apkSize = file_exists($apkPath) ? filesize($apkPath) : 0;
+        $apkSizeFormatted = $this->formatBytes($apkSize);
+        $apkAvailable = file_exists($apkPath);
+
         $dbPath = database_path('database.sqlite');
         $dbSize = file_exists($dbPath) ? filesize($dbPath) : 0;
         $dbSizeFormatted = $this->formatBytes($dbSize);
@@ -25,6 +36,9 @@ class ControlPanelController extends Controller
 
         return view('control-panel.index', [
             'recipients' => $recipients,
+            'devices' => $devices,
+            'apkSizeFormatted' => $apkSizeFormatted,
+            'apkAvailable' => $apkAvailable,
             'dbSizeFormatted' => $dbSizeFormatted,
             'dbPath' => $dbPath,
             'lastDbBackupDownloadedAt' => $lastDownloaded,
@@ -56,7 +70,7 @@ class ControlPanelController extends Controller
             ->with('success', 'Notification email removed.');
     }
 
-    public function downloadDb(): RedirectResponse
+    public function downloadDb()
     {
         $sourcePath = database_path('database.sqlite');
 
@@ -77,6 +91,19 @@ class ControlPanelController extends Controller
         return response()->download($backupPath, $backupName, [
             'Content-Type' => 'application/octet-stream',
         ])->deleteFileAfterSend(true);
+    }
+
+    public function downloadApk()
+    {
+        $apkPath = storage_path('app/apk/app-debug.apk');
+
+        if (! file_exists($apkPath)) {
+            return back()->with('error', 'Android APK is not available on this server.');
+        }
+
+        return response()->download($apkPath, 'voltcraft.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+        ]);
     }
 
     /**

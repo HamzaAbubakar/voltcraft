@@ -134,6 +134,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/control-panel/recipients', [ControlPanelController::class, 'storeRecipient'])->name('control-panel.recipients.store');
         Route::delete('/control-panel/recipients/{recipient}', [ControlPanelController::class, 'destroyRecipient'])->name('control-panel.recipients.destroy');
         Route::get('/control-panel/download-db', [ControlPanelController::class, 'downloadDb'])->name('control-panel.download-db');
+        Route::get('/control-panel/download-apk', [ControlPanelController::class, 'downloadApk'])->name('control-panel.download-apk');
     });
 });
 

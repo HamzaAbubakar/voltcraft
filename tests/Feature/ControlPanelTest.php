@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\NotificationDevice;
 use App\Models\NotificationRecipient;
 use App\Models\SystemSetting;
 use App\Models\User;
@@ -20,7 +21,42 @@ class ControlPanelTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Control Panel')
-            ->assertSee('Download DB Backup');
+            ->assertSee('Download DB Backup')
+            ->assertSee('Push Notification Devices');
+    }
+
+    public function test_admin_can_view_registered_push_devices(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $device = NotificationDevice::factory()->create([
+            'user_id' => $admin->getKey(),
+            'device_name' => 'Pixel 7',
+            'fcm_token' => 'test-fcm-token-1234567890abcdef',
+            'last_used_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('control-panel.index'));
+
+        $response->assertOk()
+            ->assertSee('Push Notification Devices')
+            ->assertSee('1')
+            ->assertSee('Pixel 7')
+            ->assertSee($admin->name)
+            ->assertSee($admin->email)
+            ->assertSee('Android')
+            ->assertSee('test-fcm-tok…');
+    }
+
+    public function test_admin_can_view_apk_download_section(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = $this->actingAs($admin)->get(route('control-panel.index'));
+
+        $response->assertOk()
+            ->assertSee('Download Voltcraft App')
+            ->assertSee('Android APK')
+            ->assertSee('Install the Voltcraft mobile app');
     }
 
     public function test_non_admin_cannot_access_control_panel(): void
