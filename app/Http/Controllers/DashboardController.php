@@ -33,6 +33,19 @@ class DashboardController extends Controller
         $lowStockQuery = InventoryItem::query()
             ->whereColumn('quantity_on_hand', '<=', 'reorder_point');
 
+        // Send low stock alerts for each item at or below reorder point
+        if ($canAccessInventory) {
+            $lowStockItemsForAlert = clone $lowStockQuery;
+            foreach ($lowStockItemsForAlert->get() as $lowStockItem) {
+                $this->notificationService->lowStockAlert(
+                    $lowStockItem->sku,
+                    $lowStockItem->name,
+                    (float) $lowStockItem->quantity_on_hand,
+                    (float) $lowStockItem->reorder_point,
+                );
+            }
+        }
+
         $monthlyBatterySales = $canAccessCash
             ? CashTransactionItem::query()
                 ->whereNotNull('battery_model_id')

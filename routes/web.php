@@ -36,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/api/push-devices/register', [PushDeviceController::class, 'register'])
         ->name('push-devices.register');
+    Route::post('/api/push-devices/status', [PushDeviceController::class, 'status'])
+        ->name('push-devices.status');
     Route::post('/dashboard/capital-flows', [CapitalFlowController::class, 'store'])
         ->middleware('page.access:cash')
         ->name('dashboard.capital-flows.store');

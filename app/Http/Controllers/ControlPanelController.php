@@ -7,6 +7,7 @@ use App\Models\NotificationRecipient;
 use App\Models\SystemSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
@@ -20,6 +21,10 @@ class ControlPanelController extends Controller
             ->with('user')
             ->orderByDesc('last_used_at')
             ->get();
+
+        $userHasDevices = NotificationDevice::query()
+            ->where('user_id', Auth::id())
+            ->exists();
 
         $apkPath = storage_path('app/apk/app-debug.apk');
         $apkSize = file_exists($apkPath) ? filesize($apkPath) : 0;
@@ -37,6 +42,7 @@ class ControlPanelController extends Controller
         return view('control-panel.index', [
             'recipients' => $recipients,
             'devices' => $devices,
+            'userHasDevices' => $userHasDevices,
             'apkSizeFormatted' => $apkSizeFormatted,
             'apkAvailable' => $apkAvailable,
             'dbSizeFormatted' => $dbSizeFormatted,

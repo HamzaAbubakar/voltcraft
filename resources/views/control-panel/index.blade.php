@@ -129,7 +129,7 @@
                 <span>Push Notification Devices</span>
                 <span class="font-mono text-xs">{{ $devices->count() }}</span>
             </div>
-            <p class="text-xs text-gray-500 mb-4">Devices registered to receive low-stock and investment-due push alerts.</p>
+            <p class="text-xs text-gray-500 mb-4">Android devices registered via the Voltcraft mobile app to receive low-stock and investment-due push alerts.</p>
 
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full min-w-[700px] border-collapse text-left text-xs">
@@ -175,6 +175,156 @@
                     </tbody>
                 </table>
             </div>
+
+            <div id="push-device-registration" class="mt-6 pt-6 border-t border-gray-800 hidden">
+                    <p class="text-xs text-gray-500 mb-3">No push notification device registered for your account yet.</p>
+                    <button
+                        id="register-push-device"
+                        class="inline-flex items-center justify-center w-full sm:w-auto rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-gray-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 hover:shadow-amber-500/40 hover:-translate-y-1 active:scale-95 transition-all"
+                    >
+                        <i class="fas fa-mobile-alt mr-2"></i>Register Device for Push Notifications
+                    </button>
+                    <p class="mt-2 text-[10px] text-gray-500">This will use your account name as the device name.</p>
+            </div>
+
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        (function () {
+            var btn = document.getElementById('register-push-device');
+            var registrationPanel = document.getElementById('push-device-registration');
+            if (!btn || !registrationPanel) return;
+
+            function showToast(message, type) {
+                var toast = document.createElement('div');
+                toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-lg text-xs font-semibold ' +
+                    (type === 'success' ? 'bg-emerald-900 text-emerald-200 border border-emerald-700' : 'bg-red-900 text-red-200 border border-red-700');
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(function () { toast.remove(); }, 5000);
+            }
+
+            function getNativeToken() {
+                try {
+                    if (window.VoltcraftNative && typeof window.VoltcraftNative.getFcmToken === 'function') {
+                        return window.VoltcraftNative.getFcmToken();
+                    } else if (window.VoltcraftPushToken) {
+                        return window.VoltcraftPushToken;
+                    }
+                } catch (e) {
+                    console.warn('VoltcraftPush: unable to read FCM token from native bridge', e);
+                }
+                return null;
+            }
+
+            function checkDeviceRegistration(token) {
+                fetch('{{ route('push-devices.status') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ fcm_token: token }),
+                })
+                .then(function (response) {
+                    return response.ok ? response.json() : null;
+                })
+                .then(function (data) {
+                    if (data && data.registered) {
+                        registrationPanel.classList.add('hidden');
+                    } else {
+                        registrationPanel.classList.remove('hidden');
+                    }
+                })
+                .catch(function () {
+                    registrationPanel.classList.remove('hidden');
+                });
+            }
+
+            var nativeToken = getNativeToken();
+            if (nativeToken) {
+                checkDeviceRegistration(nativeToken);
+            } else if (window.VoltcraftNative &&
+                typeof window.VoltcraftNative.requestPushNotifications === 'function') {
+                window.VoltcraftNative.requestPushNotifications();
+                var attempts = 0;
+                var tokenTimer = window.setInterval(function () {
+                    attempts += 1;
+                    var token = getNativeToken();
+                    if (token) {
+                        window.clearInterval(tokenTimer);
+                        checkDeviceRegistration(token);
+                    } else if (attempts >= 20) {
+                        window.clearInterval(tokenTimer);
+                        registrationPanel.classList.remove('hidden');
+                    }
+                }, 250);
+            }
+
+            btn.addEventListener('click', function () {
+                var token = getNativeToken();
+                if (!token && window.VoltcraftNative &&
+                    typeof window.VoltcraftNative.requestPushNotifications === 'function') {
+                    window.VoltcraftNative.requestPushNotifications();
+                }
+
+                if (!token) {
+                    showToast('Waiting for notification permission and FCM token registration...', 'success');
+                    var attempts = 0;
+                    var tokenTimer = window.setInterval(function () {
+                        attempts += 1;
+                        token = getNativeToken();
+                        if (token) {
+                            window.clearInterval(tokenTimer);
+                            registerToken(token);
+                        } else if (attempts >= 20) {
+                            window.clearInterval(tokenTimer);
+                            showToast('Unable to read FCM token. Please enable notifications and try again.', 'error');
+                        }
+                    }, 250);
+                } else {
+                    registerToken(token);
+                }
+            });
+
+            function registerToken(token) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Registering...';
+
+                fetch('{{ route('push-devices.register') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        fcm_token: token,
+                        device_name: '{{ addslashes(auth()->user()->name) }}',
+                    }),
+                })
+                .then(function (response) {
+                    if (!response.ok) {
+                        return response.json().then(function (err) {
+                            throw new Error(err?.message || 'Registration failed with status ' + response.status);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    showToast(data.message || 'Device registered successfully.', 'success');
+                    setTimeout(function () { location.reload(); }, 1500);
+                })
+                .catch(function (err) {
+                    showToast(err.message || 'Registration failed. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-mobile-alt mr-2"></i>Register Device for Push Notifications';
+                });
+            }
+        })();
+    </script>
+    @endpush
 @endsection
