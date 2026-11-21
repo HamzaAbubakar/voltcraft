@@ -170,24 +170,32 @@
                                             {{ $cashAccount->is_active ? 'Active' : 'Inactive' }}
                                         </span>
                                     </div>
-                                    <div class="space-y-3 py-4">
-                                        <div>
-                                            <p class="text-[11px] uppercase tracking-wide text-gray-400">Current account balance</p>
-                                            <p class="mt-0.5 font-mono text-2xl font-bold {{ $cashInTotal >= $cashOutTotal ? 'text-emerald-400' : 'text-red-400' }}">
-                                                Rs {{ number_format($cashInTotal - $cashOutTotal, 2) }}
-                                            </p>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
-                                            <div class="rounded-lg border border-gray-800 bg-gray-900/50 p-2">
-                                                <span class="block text-[10px] uppercase text-gray-400">Cash in</span>
-                                                <span class="font-mono font-semibold text-white">Rs {{ number_format($cashInTotal, 2) }}</span>
+                                        <div class="space-y-3 py-4">
+                                            <div>
+                                                <p class="text-[11px] uppercase tracking-wide text-gray-400">Current account balance</p>
+                                                <div class="mt-1 flex items-center gap-3">
+                                                    <p class="hidden font-mono text-2xl font-bold {{ $cashInTotal >= $cashOutTotal ? 'text-emerald-400' : 'text-red-400' }}" id="balance-{{ $cashAccount->id }}">
+                                                        Rs {{ number_format($cashInTotal - $cashOutTotal, 2) }}
+                                                    </p>
+                                                    <p class="font-mono text-2xl font-bold text-gray-400" id="masked-balance-{{ $cashAccount->id }}">
+                                                        Rs ******
+                                                    </p>
+                                                    <button type="button" class="text-gray-500 hover:text-white" onclick="document.getElementById('balance-{{ $cashAccount->id }}').classList.toggle('hidden'); document.getElementById('masked-balance-{{ $cashAccount->id }}').classList.toggle('hidden'); document.getElementById('details-{{ $cashAccount->id }}').classList.toggle('hidden'); const icon = document.getElementById('eye-icon-{{ $cashAccount->id }}'); icon.classList.toggle('fa-eye-slash'); icon.classList.toggle('fa-eye');">
+                                                        <i class="fas fa-eye" id="eye-icon-{{ $cashAccount->id }}"></i>
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div class="rounded-lg border border-gray-800 bg-gray-900/50 p-2">
-                                                <span class="block text-[10px] uppercase text-gray-400">Cash out</span>
-                                                <span class="font-mono font-semibold text-red-400">Rs {{ number_format($cashOutTotal, 2) }}</span>
+                                            <div class="grid grid-cols-2 gap-2 pt-1 text-xs hidden" id="details-{{ $cashAccount->id }}">
+                                                <div class="rounded-lg border border-gray-800 bg-gray-900/50 p-2">
+                                                    <span class="block text-[10px] uppercase text-gray-400">Cash in</span>
+                                                    <span class="font-mono font-semibold text-white">Rs {{ number_format($cashInTotal, 2) }}</span>
+                                                </div>
+                                                <div class="rounded-lg border border-gray-800 bg-gray-900/50 p-2">
+                                                    <span class="block text-[10px] uppercase text-gray-400">Cash out</span>
+                                                    <span class="font-mono font-semibold text-red-400">Rs {{ number_format($cashOutTotal, 2) }}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
                                 </div>
                             @endforeach
                         </div>

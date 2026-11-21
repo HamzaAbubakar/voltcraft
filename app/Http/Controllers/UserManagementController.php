@@ -32,16 +32,19 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
+            'is_admin' => ['sometimes', 'boolean'],
             'accessible_pages' => ['sometimes', 'array'],
             'accessible_pages.*' => ['string', Rule::in(array_keys(config('page_access.pages')))],
         ]);
+
+        $isAdmin = $validated['is_admin'] ?? false;
 
         User::query()->create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
-            'is_admin' => false,
-            'accessible_pages' => $validated['accessible_pages'] ?? [],
+            'is_admin' => $isAdmin,
+            'accessible_pages' => $isAdmin ? [] : ($validated['accessible_pages'] ?? []),
         ]);
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
@@ -61,6 +64,7 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user)],
             'password' => ['nullable', 'string', 'min:8'],
+            'is_admin' => ['sometimes', 'boolean'],
             'accessible_pages' => ['sometimes', 'array'],
             'accessible_pages.*' => ['string', Rule::in(array_keys(config('page_access.pages')))],
         ]);
@@ -72,7 +76,11 @@ class UserManagementController extends Controller
             $user->password = $validated['password'];
         }
 
-        if (! $user->is_admin) {
+        $user->is_admin = $validated['is_admin'] ?? false;
+
+        if ($user->is_admin) {
+            $user->accessible_pages = [];
+        } else {
             $user->accessible_pages = $validated['accessible_pages'] ?? [];
         }
 

@@ -36,7 +36,7 @@ class UserManagementTest extends TestCase
             'email' => 'inventory@example.com',
             'password' => 'secure-password',
             'accessible_pages' => ['inventory', 'cash'],
-            'is_admin' => true,
+            // Not passing is_admin - should default to false
         ]);
 
         $response->assertRedirect(route('users.index'));
@@ -45,6 +45,26 @@ class UserManagementTest extends TestCase
 
         $this->assertSame(['inventory', 'cash'], $user->accessible_pages);
         $this->assertFalse($user->is_admin);
+        $this->assertTrue(Hash::check('secure-password', $user->password));
+    }
+
+    public function test_admin_can_create_an_admin_user_with_full_access(): void
+    {
+        $admin = User::factory()->create();
+
+        $response = $this->actingAs($admin)->post(route('users.store'), [
+            'name' => 'New Admin',
+            'email' => 'newadmin@example.com',
+            'password' => 'secure-password',
+            'is_admin' => true,
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+
+        $user = User::query()->where('email', 'newadmin@example.com')->sole();
+
+        $this->assertTrue($user->is_admin);
+        $this->assertSame([], $user->accessible_pages);
         $this->assertTrue(Hash::check('secure-password', $user->password));
     }
 

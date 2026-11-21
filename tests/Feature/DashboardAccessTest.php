@@ -24,13 +24,14 @@ class DashboardAccessTest extends TestCase
 
     public function test_authenticated_users_can_view_each_erp_page(): void
     {
-        $this->actingAs(User::factory()->create());
+        // Admin users can access all pages
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
 
         $pages = [
             'dashboard' => 'Critical Low Stock Inventory Watchlist',
             'inventory.index' => 'Stock Items',
             'cash.index' => 'Cash In and Out',
-            'workforce.index' => 'Workforce Compensation',
+            'workforce.index' => 'Workforce & HR',
             'expenses.index' => 'Multi-Channel Expense Ledger',
         ];
 

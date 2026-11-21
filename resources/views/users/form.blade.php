@@ -4,6 +4,7 @@
 @php
     $isEditing = $managedUser !== null;
     $selectedPages = old('accessible_pages', $managedUser?->accessible_pages ?? []);
+    $isAdmin = old('is_admin', $managedUser?->is_admin ?? false);
 @endphp
 <div class="mx-auto max-w-3xl space-y-6">
     <div class="border-b border-gray-800 pb-4">
@@ -48,26 +49,35 @@
         </div>
 
         <section class="space-y-3 border-t border-gray-800 pt-5">
-            <div>
-                <h3 class="text-sm font-semibold text-white">Page access</h3>
-                <p class="mt-1 text-xs text-gray-500">Select the pages this user may open.</p>
+            <div class="space-y-2">
+                <label for="is_admin" class="flex items-center gap-3 rounded-lg border border-gray-800 bg-gray-950/70 px-3 py-3 text-sm text-gray-300">
+                    <input id="is_admin" name="is_admin" type="checkbox" value="1" @checked($isAdmin) class="rounded border-gray-600 bg-gray-900 text-amber-500 focus:ring-amber-500">
+                    <span>Is Administrator (grants access to all pages)</span>
+                </label>
             </div>
-            @if ($managedUser?->is_admin)
-                <div class="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-200">
-                    This account is an administrator and always has access to every page.
+
+            <div id="page-access-section" {{ $isAdmin ? 'class="hidden"' : '' }}>
+                <div>
+                    <h3 class="text-sm font-semibold text-white">Page access</h3>
+                    <p class="mt-1 text-xs text-gray-500">Select the pages this user may open.</p>
                 </div>
-            @else
-                <div class="grid gap-2 sm:grid-cols-2">
-                    @foreach ($pages as $pageKey => $pageLabel)
-                        <label for="accessible_pages_{{ $pageKey }}" class="flex items-center gap-3 rounded-lg border border-gray-800 bg-gray-950/70 px-3 py-3 text-sm text-gray-300">
-                            <input id="accessible_pages_{{ $pageKey }}" name="accessible_pages[]" type="checkbox" value="{{ $pageKey }}" @checked(is_array($selectedPages) && in_array($pageKey, $selectedPages, true)) class="rounded border-gray-600 bg-gray-900 text-amber-500 focus:ring-amber-500">
-                            <span>{{ $pageLabel }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                @error('accessible_pages')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
-                @error('accessible_pages.*')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
-            @endif
+                @if ($managedUser?->is_admin || $isAdmin)
+                    <div class="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-200">
+                        This account is an administrator and always has access to every page.
+                    </div>
+                @else
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        @foreach ($pages as $pageKey => $pageLabel)
+                            <label for="accessible_pages_{{ $pageKey }}" class="flex items-center gap-3 rounded-lg border border-gray-800 bg-gray-950/70 px-3 py-3 text-sm text-gray-300">
+                                <input id="accessible_pages_{{ $pageKey }}" name="accessible_pages[]" type="checkbox" value="{{ $pageKey }}" @checked(is_array($selectedPages) && in_array($pageKey, $selectedPages, true)) class="rounded border-gray-600 bg-gray-900 text-amber-500 focus:ring-amber-500">
+                                <span>{{ $pageLabel }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('accessible_pages')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                    @error('accessible_pages.*')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                @endif
+            </div>
         </section>
 
         <div class="flex justify-end gap-2 border-t border-gray-800 pt-5">
@@ -76,4 +86,23 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const adminCheckbox = document.getElementById('is_admin');
+            const pageAccessSection = document.getElementById('page-access-section');
+
+            if (adminCheckbox && pageAccessSection) {
+                adminCheckbox.addEventListener('change', function () {
+                    if (this.checked) {
+                        pageAccessSection.classList.add('hidden');
+                    } else {
+                        pageAccessSection.classList.remove('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+@endpush
 @endsection
