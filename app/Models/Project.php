@@ -72,7 +72,7 @@ class Project extends Model
 
     public function getNetProfitAttribute(): float
     {
-        return round($this->gross_margin - $this->site_expenses_total, 2);
+        return $this->gross_margin;
     }
 
     /**

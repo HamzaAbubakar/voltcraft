@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Employee;
 use App\Models\Project;
-use App\Models\ProjectExpense;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
@@ -26,18 +25,20 @@ class ProjectController extends Controller
         $totals = Project::query()
             ->selectRaw(
                 'COUNT(*) as project_count, '.
-                'COALESCE(SUM(system_size_watts * customer_rate_per_watt - system_size_watts * outsourced_rate_per_watt), 0) as gross_margin_total'
+                'COALESCE(SUM(system_size_watts), 0) as total_system_size_watts, '.
+                'COALESCE(SUM(system_size_watts * customer_rate_per_watt), 0) as total_contract_value, '.
+                'COALESCE(SUM(system_size_watts * customer_rate_per_watt - system_size_watts * outsourced_rate_per_watt), 0) as gross_margin_total, '.
+                'COALESCE(SUM(system_size_watts * outsourced_rate_per_watt), 0) as total_outsourcing_cost'
             )
             ->first();
-
-        $siteExpensesTotal = (float) ProjectExpense::query()->sum('amount');
 
         return view('projects.index', [
             'projects' => $projects,
             'projectCount' => (int) $totals->project_count,
+            'totalSystemSizeWatts' => (float) $totals->total_system_size_watts,
+            'totalContractValue' => (float) $totals->total_contract_value,
             'grossMarginTotal' => (float) $totals->gross_margin_total,
-            'siteExpensesTotal' => $siteExpensesTotal,
-            'netProfitTotal' => round((float) $totals->gross_margin_total - $siteExpensesTotal, 2),
+            'totalOutsourcingCost' => (float) $totals->total_outsourcing_cost,
         ]);
     }
 
@@ -104,7 +105,13 @@ class ProjectController extends Controller
 
     public function store(ProjectRequest $request): RedirectResponse
     {
-        $project = Project::create($request->validated());
+        $validated = $request->validated();
+        $validated['system_size_watts'] = $this->convertToWatts(
+            $validated['system_size_watts'],
+            $request->input('system_size_unit', 'W')
+        );
+
+        $project = Project::create($validated);
 
         return redirect()
             ->route('projects.show', $project)
@@ -143,11 +150,29 @@ class ProjectController extends Controller
 
     public function update(ProjectRequest $request, Project $project): RedirectResponse
     {
-        $project->update($request->validated());
+        $validated = $request->validated();
+        $validated['system_size_watts'] = $this->convertToWatts(
+            $validated['system_size_watts'],
+            $request->input('system_size_unit', 'W')
+        );
+
+        $project->update($validated);
 
         return redirect()
             ->route('projects.show', $project)
             ->with('success', 'Project updated.');
+    }
+
+    /**
+     * Convert system size to watts based on unit.
+     */
+    private function convertToWatts(float|int $value, string $unit): int
+    {
+        return match (strtoupper($unit)) {
+            'KW' => (int) round($value * 1000),
+            'MW' => (int) round($value * 1000000),
+            default => (int) $value,
+        };
     }
 
     public function complete(Project $project): RedirectResponse

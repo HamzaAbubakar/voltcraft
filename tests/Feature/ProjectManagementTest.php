@@ -89,13 +89,13 @@ class ProjectManagementTest extends TestCase
         $this->actingAs($user)
             ->get(route('projects.show', $project))
             ->assertOk()
-            ->assertSee('Rs 824.50')
+            ->assertSee('Rs 1,000.00')
             ->assertSee('Team meals');
 
         $this->actingAs($user)
             ->get(route('projects.index'))
             ->assertOk()
-            ->assertSee('Rs 824.50');
+            ->assertSee('Rs 1,000.00');
     }
 
     public function test_authenticated_user_can_update_project_rates_and_status(): void

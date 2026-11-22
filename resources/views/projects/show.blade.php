@@ -31,21 +31,20 @@
         <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
             <p class="text-xs text-gray-400">Contract value</p>
             <p class="mt-2 text-xl font-bold text-white">Rs {{ number_format($project->contract_value, 2) }}</p>
-            <p class="mt-1 text-[11px] text-gray-500">{{ number_format($project->system_size_watts) }} W × Rs {{ number_format((float) $project->customer_rate_per_watt, 2) }} / W</p>
-        </div>
-        <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
-            <p class="text-xs text-gray-400">Outsourcing cost</p>
-            <p class="mt-2 text-xl font-bold text-white">Rs {{ number_format($project->outsourcing_cost, 2) }}</p>
-            <p class="mt-1 text-[11px] text-gray-500">{{ number_format($project->system_size_watts) }} W × Rs {{ number_format((float) $project->outsourced_rate_per_watt, 2) }} / W</p>
+            <p class="mt-1 text-[11px] text-gray-500">{{ number_format($project->system_size_watts / 1000, 3) }} KW × Rs {{ number_format((float) $project->customer_rate_per_watt * 1000, 2) }} / KW</p>
         </div>
         <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
             <p class="text-xs text-gray-400">Gross margin</p>
             <p class="mt-2 text-xl font-bold text-amber-400">Rs {{ number_format($project->gross_margin, 2) }}</p>
         </div>
         <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
-            <p class="text-xs text-gray-400">Net project profit</p>
-            <p class="mt-2 text-xl font-bold {{ $project->net_profit < 0 ? 'text-red-400' : 'text-emerald-400' }}">Rs {{ number_format($project->net_profit, 2) }}</p>
-            <p class="mt-1 text-[11px] text-gray-500">After Rs {{ number_format($project->site_expenses_total, 2) }} in project-only site expenses</p>
+            <p class="text-xs text-gray-400">Outsourcing cost</p>
+            <p class="mt-2 text-xl font-bold text-white">Rs {{ number_format($project->outsourcing_cost, 2) }}</p>
+            <p class="mt-1 text-[11px] text-gray-500">{{ number_format($project->system_size_watts / 1000, 3) }} KW × Rs {{ number_format((float) $project->outsourced_rate_per_watt * 1000, 2) }} / KW</p>
+        </div>
+        <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
+            <p class="text-xs text-gray-400">Total expense</p>
+            <p class="mt-2 text-xl font-bold {{ $project->site_expenses_total < 0 ? 'text-red-400' : 'text-white' }}">Rs {{ number_format($project->site_expenses_total, 2) }}</p>
         </div>
     </div>
 

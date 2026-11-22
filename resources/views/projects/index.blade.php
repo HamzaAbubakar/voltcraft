@@ -25,16 +25,19 @@
             <p class="mt-2 text-xl font-bold text-white">{{ number_format($projectCount) }}</p>
         </div>
         <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
+            <p class="text-xs text-gray-400">Contract value</p>
+            <p class="mt-2 text-xl font-bold text-white">Rs {{ number_format($totalContractValue, 2) }}</p>
+            <p class="mt-1 text-[11px] text-gray-500">{{ number_format($totalSystemSizeWatts / 1000) }} KW total across {{ number_format($projectCount) }} projects</p>
+        </div>
+        <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
             <p class="text-xs text-gray-400">Gross margin</p>
             <p class="mt-2 text-xl font-bold text-amber-400">Rs {{ number_format($grossMarginTotal, 2) }}</p>
+            <p class="mt-1 text-[11px] text-gray-500">{{ number_format($totalSystemSizeWatts / 1000) }} KW total across {{ number_format($projectCount) }} projects</p>
         </div>
         <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
-            <p class="text-xs text-gray-400">Project site expenses</p>
-            <p class="mt-2 text-xl font-bold text-white">Rs {{ number_format($siteExpensesTotal, 2) }}</p>
-        </div>
-        <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
-            <p class="text-xs text-gray-400">Net project profit</p>
-            <p class="mt-2 text-xl font-bold {{ $netProfitTotal < 0 ? 'text-red-400' : 'text-emerald-400' }}">Rs {{ number_format($netProfitTotal, 2) }}</p>
+            <p class="text-xs text-gray-400">Outsourcing cost</p>
+            <p class="mt-2 text-xl font-bold text-white">Rs {{ number_format($totalOutsourcingCost, 2) }}</p>
+            <p class="mt-1 text-[11px] text-gray-500">{{ number_format($totalSystemSizeWatts / 1000) }} KW total across {{ number_format($projectCount) }} projects</p>
         </div>
     </div>
 
@@ -51,7 +54,7 @@
                         <th class="px-4 py-3 font-semibold">Lead</th>
                         <th class="px-4 py-3 text-right font-semibold">System size</th>
                         <th class="px-4 py-3 text-right font-semibold">Gross margin</th>
-                        <th class="px-4 py-3 text-right font-semibold">Site costs</th>
+                        <th class="px-4 py-3 text-right font-semibold">Total expense</th>
                         <th class="px-4 py-3 text-right font-semibold">Net profit</th>
                         <th class="px-4 py-3 text-center font-semibold">Status</th>
                         <th class="px-5 py-3 text-right font-semibold">Action</th>
@@ -65,7 +68,7 @@
                                 <p class="mt-1 text-gray-500">{{ $project->customer_name ?: $project->site_location ?: 'No customer/site details' }}</p>
                             </td>
                             <td class="px-4 py-3.5 text-gray-400">{{ $project->assignedEmployee?->name ?: '—' }}</td>
-                            <td class="px-4 py-3.5 text-right font-mono text-gray-300">{{ number_format($project->system_size_watts) }} W</td>
+                            <td class="px-4 py-3.5 text-right font-mono text-gray-300">{{ number_format($project->system_size_watts / 1000, 3) }} KW</td>
                             <td class="px-4 py-3.5 text-right font-mono text-amber-300">Rs {{ number_format($project->gross_margin, 2) }}</td>
                             <td class="px-4 py-3.5 text-right font-mono text-gray-300">Rs {{ number_format($project->site_expenses_total, 2) }}</td>
                             <td class="px-4 py-3.5 text-right font-mono font-semibold {{ $project->net_profit < 0 ? 'text-red-400' : 'text-emerald-400' }}">Rs {{ number_format($project->net_profit, 2) }}</td>

@@ -23,7 +23,7 @@ class ProjectRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'customer_name' => ['nullable', 'string', 'max:255'],
             'site_location' => ['nullable', 'string', 'max:255'],
-            'system_size_watts' => ['required', 'integer', 'min:1', 'max:100000000'],
+            'system_size_watts' => ['required', 'numeric', 'min:0.001', 'max:100000000'],
             'customer_rate_per_watt' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
             'outsourced_rate_per_watt' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
             'assigned_employee_id' => ['nullable', 'integer', Rule::exists('employees', 'id')],

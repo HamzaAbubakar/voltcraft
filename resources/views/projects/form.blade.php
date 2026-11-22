@@ -1,7 +1,31 @@
 @extends('layouts.dashboard')
 
 @section('content')
-@php($isEditing = $project !== null)
+@php
+    $isEditing = $project !== null;
+
+    // Determine display unit and value for edit mode
+    $systemSizeWatts = old('system_size_watts', $project?->system_size_watts);
+    $systemSizeUnit = old('system_size_unit');
+    $displayValue = $systemSizeWatts;
+
+    if ($isEditing && $systemSizeWatts && !$systemSizeUnit) {
+        // Auto-detect best unit for display
+        if ($systemSizeWatts >= 1000000) {
+            $systemSizeUnit = 'MW';
+            $displayValue = $systemSizeWatts / 1000000;
+        } elseif ($systemSizeWatts >= 1000) {
+            $systemSizeUnit = 'KW';
+            $displayValue = $systemSizeWatts / 1000;
+        } else {
+            $systemSizeUnit = 'W';
+            $displayValue = $systemSizeWatts;
+        }
+    } elseif (!$systemSizeUnit) {
+        $systemSizeUnit = 'KW';
+        $displayValue = $systemSizeWatts ? $systemSizeWatts / 1000 : null;
+    }
+@endphp
 <div class="mx-auto max-w-3xl space-y-6">
     <div class="border-b border-gray-800 pb-4">
         <a href="{{ $isEditing ? route('projects.show', $project) : route('projects.index') }}" class="text-xs text-gray-400 hover:text-white"><i class="fas fa-arrow-left mr-1"></i>Back to {{ $isEditing ? 'project' : 'Projects' }}</a>
@@ -37,9 +61,31 @@
                 @error('site_location')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
             </div>
             <div class="space-y-2">
-                <label for="system_size_watts" class="block text-xs font-semibold text-gray-300">System size (watts)</label>
-                <input id="system_size_watts" name="system_size_watts" type="number" min="1" step="1" value="{{ old('system_size_watts', $project?->system_size_watts) }}" required class="w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500">
+                <label class="block text-xs font-semibold text-gray-300">System size</label>
+                <div class="flex gap-2">
+                    <input
+                        id="system_size_watts"
+                        name="system_size_watts"
+                        type="number"
+                        min="0.001"
+                        step="any"
+                        value="{{ old('system_size_watts', $displayValue) }}"
+                        required
+                        class="flex-1 rounded-lg border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500"
+                        @if($systemSizeUnit === 'W') min="1" step="1" @elseif($systemSizeUnit === 'KW') step="0.001" @elseif($systemSizeUnit === 'MW') step="0.000001" @endif
+                    >
+                    <select
+                        id="system_size_unit"
+                        name="system_size_unit"
+                        class="shrink-0 w-24 rounded-lg border border-gray-700 bg-gray-950 px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500"
+                    >
+                        <option value="W" @selected(old('system_size_unit', $systemSizeUnit) === 'W')>W</option>
+                        <option value="KW" @selected(old('system_size_unit', $systemSizeUnit) === 'KW')>KW</option>
+                        <option value="MW" @selected(old('system_size_unit', $systemSizeUnit) === 'MW')>MW</option>
+                    </select>
+                </div>
                 @error('system_size_watts')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                <p class="text-[10px] text-gray-500">Stored as watts in database</p>
             </div>
             <div class="space-y-2">
                 <label for="assigned_employee_id" class="block text-xs font-semibold text-gray-300">Lead team member</label>
