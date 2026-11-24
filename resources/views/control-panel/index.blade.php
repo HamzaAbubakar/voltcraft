@@ -264,6 +264,15 @@
                 }, 250);
             }
 
+            // Listen for the FCM token injected by MainActivity.onWebPageFinished()
+            // This handles the case where the token arrives after the initial page load
+            window.addEventListener('voltcraft-push-token', function (event) {
+                var token = event.detail?.token;
+                if (token) {
+                    checkDeviceRegistration(token);
+                }
+            });
+
             btn.addEventListener('click', function () {
                 var token = getNativeToken();
                 if (!token && window.VoltcraftNative &&
